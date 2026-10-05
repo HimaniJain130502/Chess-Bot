@@ -1,0 +1,1 @@
+#Here, there will also be weights attached to the function hence when it is evaluating the board, the Position or Move will be choosen based on that. Also, the game will last till 50 Moves from Each player or 50 Moves in Total Itself.
