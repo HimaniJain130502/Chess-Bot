@@ -128,6 +128,7 @@ class Queen(Piece):
             row += 1
             col += 1
         return moves
+
 class King(Piece):
     def poss_moves(self):
         moves = []
