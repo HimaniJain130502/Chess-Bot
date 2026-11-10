@@ -210,3 +210,4 @@ if depth <= 3 and not is_in_check(...):
 - [ ] Perft test suite passes unchanged after every change
 
 > **Note:** Complete tasks in order B-1 → B-6. Task B-7 (futility pruning) is a bonus — tackle it only if B-1 through B-6 are solid and time permits.
+

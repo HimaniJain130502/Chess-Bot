@@ -230,3 +230,4 @@ Library: `python-chess` has built-in Syzygy probing via `chess.syzygy`.
 - [ ] Application never crashes when internet is unavailable (graceful fallback)
 
 > **Note:** Tasks D-1 through D-4 are the core deliverables. D-5 and D-6 (Lichess API) are valuable additions — implement them if D-1 through D-4 are stable. D-7 (local Syzygy) is a stretch goal requiring significant storage and is optional.
+

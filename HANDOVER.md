@@ -146,3 +146,4 @@ git push origin feature/<name>
 | Syzygy Tablebases | https://syzygy-tables.info |
 | Chess Programming Wiki | https://www.chessprogramming.org |
 | WAC Tactics Suite | https://www.chessprogramming.org/Win_at_Chess |
+

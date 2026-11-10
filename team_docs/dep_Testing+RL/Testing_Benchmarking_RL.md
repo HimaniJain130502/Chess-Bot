@@ -339,3 +339,4 @@ rl/
 - [ ] TD-Leaf self-play loop runs and updates eval weights without crashing
 
 > **Note:** Complete tasks E-1 through E-5 in order — these are the essential testing infrastructure. E-6 (STS), E-7 (TD-Leaf), and E-8 (policy network) are progressively more ambitious. Work on them in order if time permits after the core tasks are done.
+

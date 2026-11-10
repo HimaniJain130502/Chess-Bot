@@ -156,3 +156,4 @@ Store the choice in `Board` and re-render on the next frame.
 - [ ] Game never crashes if `assets/` folder is missing
 
 > **Note:** Not all tasks need to be finished. Complete them in order — A-1 through A-4 deliver the most value. A-5 through A-7 are quality-of-life additions to tackle if time permits after the core tasks are done.
+

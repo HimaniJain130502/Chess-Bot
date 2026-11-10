@@ -128,3 +128,4 @@
 - **Never tune eval and search simultaneously.** Change one, verify it works, then tackle the other.
 - **Keep a rollback commit** before any major Phase 2/3 change so you always have a working engine.
 - **RL is last for a reason.** A buggy or weak alpha-beta baseline makes RL training results uninterpretable. Finish and benchmark the classical engine first.
+

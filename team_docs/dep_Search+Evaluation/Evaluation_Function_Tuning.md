@@ -254,3 +254,4 @@ Use `scipy.optimize.minimize` or simple gradient-free SPSA for the optimization 
 - [ ] Engine with new eval beats old pure-PST engine in 100 self-play games (measured by Member E)
 
 > **Note:** Complete tasks C-1 through C-5 in order. C-6 (Texel tuning) requires positions data to be collected first. C-7 (NNUE) is a stretch goal — only pursue it if all other tasks are complete and time permits.
+
