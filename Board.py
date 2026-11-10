@@ -1,31 +1,90 @@
+"""
+Board representation and visual rendering with responsive scaling and coordinate labels.
+"""
 import pygame
 
+
 class Board:
-    def __init__ (self):
+    """Manages 8x8 chessboard geometry, colors, responsive scaling, and visual rendering."""
+
+    def __init__(self, sq_size=80, x_offset=0, y_offset=60):
+        """Initialize board dimensions, square colors, coordinate font, and spatial offsets."""
         self.rows = 8
         self.cols = 8
-        self.sq_size = 80
+        self.sq_size = sq_size
+        self.x_offset = x_offset
+        self.y_offset = y_offset
         self.width = self.cols * self.sq_size
         self.height = self.rows * self.sq_size
-        self.ligsq = (255, 206, 158)
-        self.darsq = (181,136,99)
-        self.board = self.cr_b()
-    def cr_b(self):
-        board = [[("black", "R"), ("black", "N"), ("black", "B"), ("black", "Q"), ("black", "K"), ("black", "B"), ("black", "N"), ("black", "R")],
-                [("black", "P"), ("black", "P"), ("black", "P"), ("black", "P"), ("black", "P"), ("black", "P"), ("black", "P"), ("black", "P")],
-                [None, None, None, None, None, None, None, None],
-                [None, None, None, None, None, None, None, None],
-                [None, None, None, None, None, None, None, None],
-                [None, None, None, None, None, None, None, None],
-                [("white", "P"), ("white", "P"), ("white", "P"), ("white", "P"), ("white", "P"), ("white", "P"), ("white", "P"), ("white", "P")],
-                [("white", "R"), ("white", "N"), ("white", "B"), ("white", "Q"), ("white", "K"), ("white", "B"), ("white", "N"), ("white", "R")]
-                ]
-        return board
-    def draw(self,screen):
+
+        # Classic tournament board colors (warm cream and walnut brown)
+        self.light_square = (240, 217, 181)
+        self.dark_square = (181, 136, 99)
+
+        # Coordinate label colors contrasting with squares
+        self.light_coord_color = (181, 136, 99)
+        self.dark_coord_color = (240, 217, 181)
+
+        self.update_fonts()
+
+    def update_fonts(self):
+        """Update coordinate font size dynamically based on current square size."""
+        font_size = max(11, int(self.sq_size * 0.18))
+        self.coord_font = pygame.font.SysFont("Arial", font_size, bold=True)
+
+    def set_geometry(self, sq_size, x_offset, y_offset):
+        """Recalculate board pixel dimensions and offset positions on window resize."""
+        self.sq_size = sq_size
+        self.x_offset = x_offset
+        self.y_offset = y_offset
+        self.width = self.cols * self.sq_size
+        self.height = self.rows * self.sq_size
+        self.update_fonts()
+
+    def draw_squares(self, screen):
+        """Draw alternating light and dark squares across the 8x8 board."""
         for row in range(self.rows):
             for col in range(self.cols):
-                if (row + col) % 2 == 0:
-                    color = self.ligsq
-                else:
-                    color = self.darsq
-                pygame.draw.rect(screen, color, (col * self.sq_size, row * self.sq_size, self.sq_size, self.sq_size))
+                color = self.light_square if (row + col) % 2 == 0 else self.dark_square
+                rect = (
+                    self.x_offset + col * self.sq_size,
+                    self.y_offset + row * self.sq_size,
+                    self.sq_size,
+                    self.sq_size
+                )
+                pygame.draw.rect(screen, color, rect)
+
+    def draw_coordinates(self, screen):
+        """Draw file letters (a-h) and rank numbers (1-8) along the board margins."""
+        files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+
+        for row in range(self.rows):
+            for col in range(self.cols):
+                is_light = (row + col) % 2 == 0
+                font_color = self.light_coord_color if is_light else self.dark_coord_color
+
+                # Rank numbers (8 to 1) on column 0
+                if col == 0:
+                    rank_text = str(8 - row)
+                    label = self.coord_font.render(rank_text, True, font_color)
+                    screen.blit(
+                        label,
+                        (self.x_offset + col * self.sq_size + 4, self.y_offset + row * self.sq_size + 4)
+                    )
+
+                # File letters (a to h) on row 7
+                if row == 7:
+                    file_text = files[col]
+                    label = self.coord_font.render(file_text, True, font_color)
+                    screen.blit(
+                        label,
+                        (
+                            self.x_offset + (col + 1) * self.sq_size - label.get_width() - 4,
+                            self.y_offset + (row + 1) * self.sq_size - label.get_height() - 4
+                        )
+                    )
+
+    def draw(self, screen):
+        """Render complete chessboard with squares and coordinates."""
+        self.draw_squares(screen)
+        self.draw_coordinates(screen)
