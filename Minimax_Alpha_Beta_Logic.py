@@ -5,9 +5,8 @@ with Zobrist Hashing, MVV-LVA + Killer Move ordering, and Quiescence search.
 import random
 from Game_logic import get_all_legal_moves, is_in_check
 
-# ---------------------------------------------------------------------------
 # Material values (centipawns)
-# ---------------------------------------------------------------------------
+
 PIECE_VALUES = {
     "Pawn": 100,
     "Knight": 320,
@@ -17,9 +16,8 @@ PIECE_VALUES = {
     "King": 20000
 }
 
-# ---------------------------------------------------------------------------
 # Piece-square tables (from White's perspective; flipped for Black)
-# ---------------------------------------------------------------------------
+
 PAWN_TABLE = [
     [0,   0,   0,   0,   0,   0,   0,   0],
     [50,  50,  50,  50,  50,  50,  50,  50],
