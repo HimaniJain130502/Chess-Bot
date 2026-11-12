@@ -8,6 +8,7 @@ from core.pieces import Pawn, Rook, Knight, Bishop, Queen, King
 from core.game_logic import get_legal_moves, is_in_check, is_checkmate, is_stalemate, find_king
 from core.moves import format_move
 from engine.search import find_best_move
+from engine.opening_book import PolyglotBook
 from engine.evaluation import PIECE_VALUES
 
 PIECE_SYMBOLS = {
@@ -78,6 +79,7 @@ class Game:
         self.recalculate_layout()
         self.update_fonts()
         self.setup_pieces()
+        self.opening_book = PolyglotBook()
 
     def recalculate_layout(self):
         """Compute responsive layout placing board on left and Lichess panel on right."""
@@ -479,6 +481,15 @@ class Game:
     def make_ai_move(self):
         """Calculate and initiate animated AI move using search engine."""
         if self.game_over or self.turn != self.ai_color or self.active_animation is not None:
+            return
+
+        # Prefer a legal move from the bundled Polyglot opening book.
+        # If the position is not covered, retain the original search unchanged.
+        book_move = self.opening_book.get_move(self)
+        if book_move is not None:
+            piece, (target_row, target_col) = book_move
+            self.game_status_text = "Computer plays (Book)"
+            self.start_move(piece, target_row, target_col)
             return
 
         best_move = find_best_move(self, depth=3, time_limit_ms=800)
