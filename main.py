@@ -3,13 +3,13 @@ Application entry point supporting scalable resizable window, fullscreen toggle,
 """
 import sys
 import pygame
-from Game import Game
+from gui.game import Game
 
 
 def main():
     """Initialize scalable Pygame display, run event loop, and manage Player vs AI game turns."""
     pygame.init()
-    width = 640
+    width = 980
     height = 700
 
     screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)

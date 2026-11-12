@@ -3,113 +3,27 @@ Chess search engine: Negamax + Alpha-Beta, Iterative Deepening, Transposition Ta
 with Zobrist Hashing, MVV-LVA + Killer Move ordering, and Quiescence search.
 """
 import random
-from Game_logic import get_all_legal_moves, is_in_check
+from core.game_logic import get_all_legal_moves, is_in_check
+from engine.evaluation import evaluate_board, PIECE_VALUES
 
-# ---------------------------------------------------------------------------
-# Material values (centipawns)
-# ---------------------------------------------------------------------------
-PIECE_VALUES = {
-    "Pawn": 100,
-    "Knight": 320,
-    "Bishop": 330,
-    "Rook": 500,
-    "Queen": 900,
-    "King": 20000
-}
-
-# ---------------------------------------------------------------------------
-# Piece-square tables (from White's perspective; flipped for Black)
-# ---------------------------------------------------------------------------
-PAWN_TABLE = [
-    [0,   0,   0,   0,   0,   0,   0,   0],
-    [50,  50,  50,  50,  50,  50,  50,  50],
-    [10,  10,  20,  30,  30,  20,  10,  10],
-    [5,   5,  10,  25,  25,  10,   5,   5],
-    [0,   0,   0,  20,  20,   0,   0,   0],
-    [5,  -5, -10,   0,   0, -10,  -5,   5],
-    [5,  10,  10, -20, -20,  10,  10,   5],
-    [0,   0,   0,   0,   0,   0,   0,   0],
-]
-KNIGHT_TABLE = [
-    [-50, -40, -30, -30, -30, -30, -40, -50],
-    [-40, -20,   0,   0,   0,   0, -20, -40],
-    [-30,   0,  10,  15,  15,  10,   0, -30],
-    [-30,   5,  15,  20,  20,  15,   5, -30],
-    [-30,   0,  15,  20,  20,  15,   0, -30],
-    [-30,   5,  10,  15,  15,  10,   5, -30],
-    [-40, -20,   0,   5,   5,   0, -20, -40],
-    [-50, -40, -30, -30, -30, -30, -40, -50],
-]
-BISHOP_TABLE = [
-    [-20, -10, -10, -10, -10, -10, -10, -20],
-    [-10,   0,   0,   0,   0,   0,   0, -10],
-    [-10,   0,   5,  10,  10,   5,   0, -10],
-    [-10,   5,   5,  10,  10,   5,   5, -10],
-    [-10,   0,  10,  10,  10,  10,   0, -10],
-    [-10,  10,  10,  10,  10,  10,  10, -10],
-    [-10,   5,   0,   0,   0,   0,   5, -10],
-    [-20, -10, -10, -10, -10, -10, -10, -20],
-]
-ROOK_TABLE = [
-    [0,   0,   0,   0,   0,   0,   0,  0],
-    [5,  10,  10,  10,  10,  10,  10,  5],
-    [-5,  0,   0,   0,   0,   0,   0, -5],
-    [-5,  0,   0,   0,   0,   0,   0, -5],
-    [-5,  0,   0,   0,   0,   0,   0, -5],
-    [-5,  0,   0,   0,   0,   0,   0, -5],
-    [-5,  0,   0,   0,   0,   0,   0, -5],
-    [0,   0,   0,   5,   5,   0,   0,  0],
-]
-QUEEN_TABLE = [
-    [-20, -10, -10,  -5,  -5, -10, -10, -20],
-    [-10,   0,   0,   0,   0,   0,   0, -10],
-    [-10,   0,   5,   5,   5,   5,   0, -10],
-    [ -5,   0,   5,   5,   5,   5,   0,  -5],
-    [  0,   0,   5,   5,   5,   5,   0,  -5],
-    [-10,   5,   5,   5,   5,   5,   0, -10],
-    [-10,   0,   5,   0,   0,   0,   0, -10],
-    [-20, -10, -10,  -5,  -5, -10, -10, -20],
-]
-KING_MIDDLE = [
-    [-30, -40, -40, -50, -50, -40, -40, -30],
-    [-30, -40, -40, -50, -50, -40, -40, -30],
-    [-30, -40, -40, -50, -50, -40, -40, -30],
-    [-30, -40, -40, -50, -50, -40, -40, -30],
-    [-20, -30, -30, -40, -40, -30, -30, -20],
-    [-10, -20, -20, -20, -20, -20, -20, -10],
-    [ 20,  20,   0,   0,   0,   0,  20,  20],
-    [ 20,  30,  10,   0,   0,  10,  30,  20],
-]
-PST_MAP = {
-    "Pawn":   PAWN_TABLE,
-    "Knight": KNIGHT_TABLE,
-    "Bishop": BISHOP_TABLE,
-    "Rook":   ROOK_TABLE,
-    "Queen":  QUEEN_TABLE,
-    "King":   KING_MIDDLE,
-}
-
-# ---------------------------------------------------------------------------
 # Zobrist Hashing tables
-# ---------------------------------------------------------------------------
 _PIECE_INDEX = {
     ("white", "Pawn"): 0, ("white", "Knight"): 1, ("white", "Bishop"): 2,
     ("white", "Rook"): 3, ("white", "Queen"):  4, ("white", "King"):   5,
     ("black", "Pawn"): 6, ("black", "Knight"): 7, ("black", "Bishop"): 8,
     ("black", "Rook"): 9, ("black", "Queen"): 10, ("black", "King"):  11,
 }
-# 12 piece types × 64 squares + side-to-move + 4 castling rights + 8 ep files
+# 12 piece types x 64 squares + side-to-move + 4 castling rights + 8 ep files
 _rng = random.Random(0xDEADBEEF)
 _ZOBRIST_PIECES  = [[_rng.getrandbits(64) for _ in range(64)] for _ in range(12)]
 _ZOBRIST_SIDE    = _rng.getrandbits(64)
 _ZOBRIST_CASTLE  = [_rng.getrandbits(64) for _ in range(4)]   # wKS, wQS, bKS, bQS
 _ZOBRIST_EP      = [_rng.getrandbits(64) for _ in range(8)]   # ep file a-h
 
-# ---------------------------------------------------------------------------
 # Transposition table
 # TT entry: {"depth": int, "score": int, "flag": "EXACT"|"LOWER"|"UPPER",
 #            "best_move": (piece_obj, (tr, tc))}
-# ---------------------------------------------------------------------------
+
 TT: dict = {}
 TT_MAX_SIZE = 1 << 20   # ~1 M entries; evict on overflow
 
@@ -139,33 +53,8 @@ def compute_zobrist(game):
 
     return h
 
-
-# ---------------------------------------------------------------------------
-# Evaluation
-# ---------------------------------------------------------------------------
-def get_pst_value(piece):
-    """Return piece-square bonus for the given piece at its current position."""
-    table = PST_MAP.get(piece.__class__.__name__)
-    if table is None:
-        return 0
-    r, c = (piece.row, piece.col) if piece.color == "white" else (7 - piece.row, piece.col)
-    return table[r][c]
-
-
-def evaluate_board(game):
-    """Calculate static board score from white's perspective (centipawns)."""
-    score = 0
-    for piece in game.pieces:
-        if piece is None:
-            continue
-        v = PIECE_VALUES.get(piece.__class__.__name__, 0) + get_pst_value(piece)
-        score += v if piece.color == "white" else -v
-    return score
-
-
-# ---------------------------------------------------------------------------
 # Killer moves: 2 slots per depth, max search depth 10
-# ---------------------------------------------------------------------------
+
 MAX_DEPTH = 10
 _killers: list = [[None, None] for _ in range(MAX_DEPTH + 1)]
 
@@ -184,10 +73,8 @@ def is_killer(ply, piece, tr, tc):
             return True
     return False
 
+# Move ordering: TT best move -> captures (MVV-LVA) -> killers -> center bias
 
-# ---------------------------------------------------------------------------
-# Move ordering: TT best move → captures (MVV-LVA) → killers → center bias
-# ---------------------------------------------------------------------------
 def _move_score(game, piece, tr, tc, ply, tt_best):
     """Return ordering priority for a single move (higher = try first)."""
     # TT best move: search first
@@ -202,31 +89,29 @@ def _move_score(game, piece, tr, tc, ply, tt_best):
     if target is not None or is_ep:
         victim_v  = PIECE_VALUES.get(target.__class__.__name__, 100) if target else 100
         attacker_v = PIECE_VALUES.get(piece.__class__.__name__, 100)
-        # MVV-LVA: big victim, small attacker → high score
         return 100_000 + victim_v * 10 - attacker_v
 
-    # Quiet killer moves
-    if is_killer(ply, piece, tr, tc):
+    # Killer move heuristic
+    if ply <= MAX_DEPTH and is_killer(ply, piece, tr, tc):
         return 50_000
 
-    # Center proximity bonus for quiet moves
-    return int(100 - (abs(3.5 - tr) + abs(3.5 - tc)) * 10)
+    # Center-bias tiebreaker: prefer moves towards d4, d5, e4, e5
+    center_dist = abs(tr - 3.5) + abs(tc - 3.5)
+    return int((7 - center_dist) * 10)
 
 
 def sort_moves(game, moves, ply=0, tt_best=None):
     """Sort legal moves in-place by priority (descending) to maximise alpha-beta cutoffs."""
     moves.sort(key=lambda m: _move_score(game, m[0], m[1][0], m[1][1], ply, tt_best), reverse=True)
 
-
-# ---------------------------------------------------------------------------
 # Move simulation / undo (used exclusively by the search, not the GUI)
-# ---------------------------------------------------------------------------
+
 def simulate_move(game, piece, tr, tc):
     """Apply move to the game state and return an undo snapshot; does NOT touch GUI state."""
     orig_r, orig_c = piece.row, piece.col
-    orig_fm        = piece.first_move
-    captured       = game.grid[tr][tc]
-    prev_ep        = game.en_passant_target
+    orig_fm = piece.first_move
+    captured = game.grid[tr][tc]
+    prev_ep = game.en_passant_target
 
     # En passant capture
     ep_cap = None
@@ -236,20 +121,19 @@ def simulate_move(game, piece, tr, tc):
     if is_ep:
         ep_cap = game.grid[orig_r][tc]
         game.grid[orig_r][tc] = None
-        if ep_cap in game.pieces:
-            game.pieces.remove(ep_cap)
+        game.pieces.remove(ep_cap)
 
     # Standard capture
-    if captured is not None and captured in game.pieces:
+    if captured is not None:
         game.pieces.remove(captured)
 
-    # Place piece
+    # Move piece
     game.grid[orig_r][orig_c] = None
     game.grid[tr][tc] = piece
     piece.row, piece.col = tr, tc
-    piece.first_move   = False
+    piece.first_move = False
 
-    # Castling: also move the rook
+    # Castling rook reposition
     castled = None
     if piece.__class__.__name__ == "King" and abs(tc - orig_c) == 2:
         rook_c_from, rook_c_to = (7, 5) if tc == 6 else (0, 3)
@@ -269,7 +153,7 @@ def simulate_move(game, piece, tr, tc):
     # Pawn promotion in search: silently promote to Queen
     promoted = None
     if piece.__class__.__name__ == "Pawn" and (tr == 0 or tr == 7):
-        from Pieces import Queen as Q
+        from core.pieces import Queen as Q
         promoted = Q(piece.color, tr, tc)
         promoted.first_move = False
         game.pieces.remove(piece)
@@ -328,10 +212,7 @@ def undo_simulated_move(game, snap):
     game.en_passant_target = snap["prev_ep"]
     game.turn = "black" if game.turn == "white" else "white"
 
-
-# ---------------------------------------------------------------------------
 # Quiescence search (stand-pat + captures only)
-# ---------------------------------------------------------------------------
 def quiescence(game, alpha, beta, ply, q_limit=4):
     """Extend search with captures until quiet; prevents horizon-effect blunders."""
     color       = game.turn
@@ -360,10 +241,7 @@ def quiescence(game, alpha, beta, ply, q_limit=4):
 
     return alpha
 
-
-# ---------------------------------------------------------------------------
 # Negamax with Alpha-Beta, TT, and killer moves
-# ---------------------------------------------------------------------------
 MATE_SCORE = 99_000  # score returned for checkmate (adjusted by ply for faster-mate preference)
 
 
@@ -371,7 +249,7 @@ def negamax(game, depth, alpha, beta, ply, tt_best_in=None):
     """Negamax search with Alpha-Beta pruning, Transposition Table, and killer move ordering."""
     orig_alpha = alpha
 
-    # --- Transposition table probe ---
+    # Transposition table probe
     z_key = compute_zobrist(game)
     tt_entry = TT.get(z_key)
     tt_best  = None
@@ -388,7 +266,7 @@ def negamax(game, depth, alpha, beta, ply, tt_best_in=None):
         if alpha >= beta:
             return tt_score
 
-    # --- Leaf node ---
+    # Leaf node
     if depth <= 0:
         return quiescence(game, alpha, beta, ply)
 
@@ -421,7 +299,7 @@ def negamax(game, depth, alpha, beta, ply, tt_best_in=None):
                 store_killer(ply, (id(piece), tr, tc))
             break
 
-    # --- Store result in Transposition Table ---
+    # Store result in Transposition Table
     if len(TT) >= TT_MAX_SIZE:
         TT.clear()   # Simple replacement: evict all when full
 
@@ -431,10 +309,7 @@ def negamax(game, depth, alpha, beta, ply, tt_best_in=None):
 
     return best_score
 
-
-# ---------------------------------------------------------------------------
 # Iterative Deepening with time budget
-# ---------------------------------------------------------------------------
 def find_best_move(game, depth=3, time_limit_ms=800):
     """Search for optimal move using Iterative Deepening Negamax with time budget."""
     import time
@@ -465,7 +340,6 @@ def find_best_move(game, depth=3, time_limit_ms=800):
         sort_moves(game, all_moves, ply=0, tt_best=tt_best)
 
         color      = game.turn
-        sign       = 1 if color == "white" else -1
         alpha      = -float("inf")
         beta       = float("inf")
         depth_best = None

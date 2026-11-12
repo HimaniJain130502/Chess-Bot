@@ -1,7 +1,7 @@
 # Task: Search Engine Optimization
 **Assigned To:** Member B  
 **Topic:** Negamax, Null-Move Pruning, LMR, PVS, History Heuristic, Futility Pruning  
-**Dependencies:** None — the baseline Negamax engine is already in place. Work directly in `Minimax_Alpha_Beta_Logic.py`.
+**Dependencies:** None — the baseline Negamax engine is already in place. Work directly in `engine/search.py`.
 
 > **Important for teammates:** Member C (Evaluation), Member D (Opening Book), and Member E (Testing) all depend on a **stable, correct** search engine. Avoid breaking the `find_best_move()` interface. If you change its signature, notify those teammates immediately.
 
@@ -9,7 +9,7 @@
 
 ## Context
 
-The current engine in `Minimax_Alpha_Beta_Logic.py` implements:
+The current engine in `engine/search.py` implements:
 
 | Feature | Status |
 | :--- | :--- |
@@ -35,7 +35,7 @@ The current engine in `Minimax_Alpha_Beta_Logic.py` implements:
 Killer moves capture only 2 moves per ply. The **history heuristic** tracks *all* quiet moves that caused beta-cutoffs across the entire search, weighted by depth.
 
 ```python
-# Add near top of Minimax_Alpha_Beta_Logic.py
+# Add near top of engine/search.py
 _history: dict = {}   # key: (piece_class_name, to_square) → score
 
 def update_history(piece, tr, tc, depth):

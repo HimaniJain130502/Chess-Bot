@@ -19,7 +19,7 @@ Score = Σ (material_value + PST_value) for each piece
 
 This is a **pure material + positional** evaluation. It has no understanding of pawn structure, king danger, or piece mobility. Your task is to extend it in layers, then optionally replace the hand-crafted weights with learned ones via Texel tuning and NNUE.
 
-All new evaluation code lives in a **new file: `Evaluation.py`**. The existing `evaluate_board()` in `Minimax_Alpha_Beta_Logic.py` will import from it.
+All evaluation code lives in `engine/evaluation.py`. The existing `evaluate_board()` in `engine/search.py` imports from it.
 
 ---
 
@@ -46,9 +46,9 @@ def evaluate(game) -> int:
     return score
 ```
 
-Then in `Minimax_Alpha_Beta_Logic.py`:
+Then in `engine/search.py`:
 ```python
-from Evaluation import evaluate as evaluate_board
+from engine.evaluation import evaluate as evaluate_board
 ```
 
 ---
