@@ -3,6 +3,14 @@ Simple unit tests for Evaluation.py terms.
 """
 
 import os
+import sys
+from pathlib import Path
+
+# Ensure repository root is on sys.path when running script directly
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 import unittest
 import pygame

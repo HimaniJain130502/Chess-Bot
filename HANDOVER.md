@@ -23,18 +23,23 @@ The goal is to progressively strengthen the engine and add quality-of-life featu
 ```
 Chess-Bot/
 ├── main.py                     # Entry point — Pygame loop, fullscreen, resize, shortcuts
+├── requirements.txt            # Project dependencies for setup
 ├── core/                       # Chess rules, piece physics & coordinate representations
 │   ├── pieces.py               # Piece classes — movement rules with collision/capture logic
 │   ├── game_logic.py           # Rules engine — legal moves, check, checkmate, stalemate
-│   └── moves.py                # Algebraic notation helpers — square conversion, move formatting
+│   ├── moves.py                # Algebraic notation helpers — square conversion, move formatting
+│   └── fen.py                  # FEN string loader and board state parser
 ├── engine/                     # AI decision making: search & evaluation
 │   ├── evaluation.py           # Dynamic evaluation (material, PST, pawns, king safety, phase tapering)
-│   └── search.py               # Search engine — Negamax, Alpha-Beta, TT, ID, Quiescence
+│   ├── search.py               # Search engine — Negamax, Alpha-Beta, TT, ID, Quiescence
+│   ├── opening_book.py         # Polyglot opening book reader
+│   └── openings.bin            # Polyglot opening book binary data
 ├── gui/                        # Visual presentation & user interactions
 │   ├── board.py                # Board rendering — squares, coordinate labels, responsive scale
 │   └── game.py                 # Game controller — state, turns, animation, undo/redo, draw
 ├── tests/                      # Automated unit test suite
-│   └── test_evaluation.py      # Unit tests for evaluation terms
+│   ├── test_evaluation.py      # Unit tests for evaluation terms
+│   └── benchmark_rating.py     # Calibrated tactical benchmark & Elo estimator
 ├── team_docs/                  # Per-member task files (see Section 5)
 ├── PLAN.md                     # Architecture + Phase roadmap
 ├── STEPWISE_PLAN.md            # Ordered step-by-step implementation plan (all phases)
@@ -45,8 +50,8 @@ Chess-Bot/
 ## 4. How to Run
 
 ```bash
-# Install dependency (only pygame-ce needed)
-pip install pygame-ce
+# Install dependencies from requirements.txt
+pip install -r requirements.txt
 
 # Launch game
 python main.py
